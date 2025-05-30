@@ -699,6 +699,27 @@
             }
         }
 
+        // Add event and push to GitHub
+        async function saveEvent() {
+            const title = document.getElementById('event-title').value.trim();
+            const time = document.getElementById('event-time').value;
+            if (title && selectedDate) {
+                data.events.push({ date: selectedDate, title, time });
+                await saveData(); // Push updated events to GitHub
+                document.getElementById('event-form').classList.add('hidden');
+                renderCalendar();
+                updateCountdown();
+            }
+        }
+
+        // Delete event and push to GitHub
+        async function deleteEvent(index) {
+            data.events.splice(index, 1);
+            await saveData(); // Push updated events to GitHub
+            renderCalendar();
+            updateCountdown();
+        }
+
         // Load data on page load
         window.onload = async function() {
             await fetchData();
@@ -1034,7 +1055,7 @@
             const time = document.getElementById('event-time').value;
             if (title && selectedDate) {
                 data.events.push({ date: selectedDate, title, time });
-                await saveData();
+                await saveData(); // Push updated events to GitHub
                 document.getElementById('event-form').classList.add('hidden');
                 renderCalendar();
                 updateCountdown();
@@ -1070,7 +1091,7 @@
 
         async function deleteEvent(index) {
             data.events.splice(index, 1);
-            await saveData();
+            await saveData(); // Push updated events to GitHub
             renderCalendar();
             updateCountdown();
         }
