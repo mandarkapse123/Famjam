@@ -606,6 +606,12 @@
     </div>
 
     <script>
+const GITHUB_TOKEN = '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'; // Updated token
+const REPO_OWNER = 'mandarkapse123';
+const REPO_NAME = 'Famjam';
+const DATA_FILE_PATH = 'data.json';
+const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE_PATH}`;
+
 const defaults = {
     todos: [],
     reminders: { 1: [], 2: [], 3: [], 4: [] },
@@ -615,6 +621,8 @@ const defaults = {
 };
 let data = { ...defaults };
 let currentSha = null;
+let currentDate = new Date();
+let selectedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`;
 
 // Fetch data from GitHub
 async function fetchData() {
@@ -691,6 +699,36 @@ async function deleteEvent(index) {
     await saveData();
     renderCalendar();
     updateCountdown();
+}
+
+// Add Reminder
+async function addReminder(personId) {
+    const input = document.getElementById(`reminder${personId}-input`);
+    const reminderText = input.value.trim();
+    if (reminderText) {
+        data.reminders[personId].push(reminderText);
+        await saveData();
+        renderReminders(personId);
+        input.value = '';
+    }
+}
+
+// Add Todo
+async function addTodo() {
+    const input = document.getElementById('todo-input');
+    const tagSelect = document.getElementById('todo-tag');
+    const todoText = input.value.trim();
+    const selectedTags = Array.from(tagSelect.selectedOptions)
+        .map(option => option.value)
+        .filter(value => value !== '');
+    const tag = selectedTags.join(',');
+    if (todoText) {
+        data.todos.push({ text: todoText, completed: false, tag: tag });
+        await saveData();
+        renderTodos();
+        input.value = '';
+        tagSelect.value = '';
+    }
 }
 
 // On page load
