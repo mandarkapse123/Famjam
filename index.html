@@ -412,11 +412,7 @@
         <div id="error-message" class="error-message hidden"></div>
     </div>
     <script>
-const GITHUB_TOKEN = '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';
-const REPO_OWNER = 'mandarkapse123';
-const REPO_NAME = 'Famjam';
-const DATA_FILE_PATH = 'data.json';
-const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE_PATH}`;
+const BACKEND_URL = 'http://localhost:4000/api/data';
 
 const defaults = {
     todos: [],
@@ -433,26 +429,13 @@ let selectedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-$
 // Fetch data from GitHub
 async function fetchData() {
     try {
-        const response = await fetch(API_URL, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        if (response.status === 404) {
-            data = { ...defaults };
-            currentSha = null;
-            return false;
-        }
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
+        const response = await fetch(BACKEND_URL);
         const fileData = await response.json();
         currentSha = fileData.sha;
-        data = JSON.parse(atob(fileData.content));
+        data = fileData.content ? JSON.parse(fileData.content) : { ...defaults };
         return true;
     } catch (error) {
-        showError(`Error loading data from GitHub: ${error.message}`);
+        showError(`Error loading data from backend: ${error.message}`);
         return false;
     }
 }
@@ -460,27 +443,18 @@ async function fetchData() {
 // Save data to GitHub
 async function saveData() {
     try {
-        const content = btoa(JSON.stringify(data, null, 2));
-        const body = {
-            message: 'Update data.json from Family HQ dashboard',
-            content,
-            ...(currentSha ? { sha: currentSha } : {})
-        };
-        const response = await fetch(API_URL, {
+        const response = await fetch(BACKEND_URL, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            body: JSON.stringify(body)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: JSON.stringify(data, null, 2),
+                sha: currentSha
+            })
         });
-        if (!response.ok) {
-            throw new Error(`Failed to save data: ${response.statusText}`);
-        }
         const responseData = await response.json();
-        currentSha = responseData.content.sha;
+        if (responseData.sha) currentSha = responseData.sha;
     } catch (error) {
-        showError(`Error saving data to GitHub: ${error.message}`);
+        showError(`Error saving data to backend: ${error.message}`);
     }
 }
 
@@ -752,27 +726,27 @@ function updateCountdown() {
             const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
             const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-            countdownTitle.textContent = `Upcoming: ${event.title}`;
-            countdownList.textContent = `${String(diffDays).padStart(2, '0')}d ${String(diffHours).padStart(2, '0')}h ${String(diffMinutes).padStart(2, '0')}m ${String(diffSeconds).padStart(2, '0')}s`;
+            countdownTitle.textContent = `Upcoming: ${event.title}`;ent = `Upcoming: ${event.title}`;
+            countdownList.textContent = `${String(diffDays).padStart(2, '0')}d ${String(diffHours).padStart(2, '0')}h ${String(diffMinutes).padStart(2, '0')}m ${String(diffSeconds).padStart(2, '0')}s`;tent = `${String(diffDays).padStart(2, '0')}d ${String(diffHours).padStart(2, '0')}h ${String(diffMinutes).padStart(2, '0')}m ${String(diffSeconds).padStart(2, '0')}s`;
         }
     });
 
-    if (hasUpcomingEvent) {
-        countdownSection.classList.remove('hidden');
+    if (hasUpcomingEvent) {   if (hasUpcomingEvent) {
+        countdownSection.classList.remove('hidden');        countdownSection.classList.remove('hidden');
     } else {
-        countdownSection.classList.add('hidden');
+        countdownSection.classList.add('hidden');ssList.add('hidden');
     }
 }
 
 // Background image
-async function handleBackgroundUpload(event) {
-    const file = event.target.files[0];
+async function handleBackgroundUpload(event) {load(event) {
+    const file = event.target.files[0];    const file = event.target.files[0];
     if (file) {
-        const reader = new FileReader();
+        const reader = new FileReader();der();
         reader.onload = async function(e) {
             data.backgroundImage = e.target.result;
             await saveData();
-            document.body.style.backgroundImage = `url(${data.backgroundImage})`;
+            document.body.style.backgroundImage = `url(${data.backgroundImage})`;oundImage})`;
         };
         reader.readAsDataURL(file);
     }
@@ -785,18 +759,18 @@ function loadBackgroundImage() {
 
 // On page load
 window.onload = async function() {
-    await fetchData();
+    await fetchData();tchData();
     renderTodos();
-    for (let i = 1; i <= 4; i++) {
-        renderReminders(i);
-        updateName(i);
+    for (let i = 1; i <= 4; i++) {or (let i = 1; i <= 4; i++) {
+        renderReminders(i);       renderReminders(i);
+        updateName(i);        updateName(i);
     }
     updateTodoTagOptions();
     renderCalendar();
-    updateCountdown();
+    updateCountdown();down();
     setInterval(updateCountdown, 1000);
     loadBackgroundImage();
-    document.getElementById('background-upload-input').addEventListener('change', handleBackgroundUpload);
+    document.getElementById('background-upload-input').addEventListener('change', handleBackgroundUpload);t').addEventListener('change', handleBackgroundUpload);
 };
     </script>
 </body>
