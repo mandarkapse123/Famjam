@@ -370,7 +370,9 @@
                     </div>
                     <div id="calendar-days" class="calendar-grid"></div>
                     <button onclick="showEventForm()" class="secondary-btn w-full mt-2">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.5rem; height: 1.5rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
                         Add Event
                     </button>
                     <div id="event-form" class="hidden mt-2">
@@ -401,8 +403,10 @@
                             <option value="Agastya">Agastya</option>
                         </select>
                     </div>
-                    <button onclick="addTodo()" class="secondary-btn w-full">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <button onclick="addTodo()" class="secondary-btn w-full" style="padding: 0.5rem 1rem; font-size: 1.5rem;">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.5rem; height: 1.5rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
                         Add To-Do
                     </button>
                     <ul id="todo-list" class="mt-2 space-y-2"></ul>
