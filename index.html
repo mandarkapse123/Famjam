@@ -369,8 +369,8 @@
                         <div class="calendar-day header">Sa</div>
                     </div>
                     <div id="calendar-days" class="calendar-grid"></div>
-                    <button onclick="showEventForm()" class="secondary-btn w-full mt-2">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.5rem; height: 1.5rem;">
+                    <button onclick="showEventForm()" class="secondary-btn w-full mt-2" style="padding: 0.3rem 0.7rem; font-size: 1rem;">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
                         Add Event
@@ -430,7 +430,7 @@ let currentSha = null;
 let currentDate = new Date();
 let selectedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`;
 
-// Fetch data from GitHub
+// Fetch data from backend
 async function fetchData() {
     try {
         const response = await fetch(BACKEND_URL);
@@ -444,7 +444,7 @@ async function fetchData() {
     }
 }
 
-// Save data to GitHub
+// Save data to backend
 async function saveData() {
     try {
         const response = await fetch(BACKEND_URL, {
@@ -506,7 +506,7 @@ async function deleteReminder(personId, index) {
 }
 
 // Name edit functions
-async function editName(personId) {
+function editName(personId) {
     document.getElementById(`person${personId}-name`).classList.add('hidden');
     document.getElementById(`person${personId}-edit`).classList.remove('hidden');
     document.getElementById(`person${personId}-name-input`).value = data.names[personId];
@@ -688,7 +688,7 @@ function selectDate(year, month, day) {
     selectedDate = `${year}-${month + 1}-${day}`;
     renderCalendar();
 }
-async function showEventForm() {
+function showEventForm() {
     document.getElementById('event-form').classList.remove('hidden');
     document.getElementById('event-title').value = '';
     document.getElementById('event-time').value = '';
