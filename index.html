@@ -196,14 +196,11 @@
             margin-top: 1rem;
         }
         .background-upload {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            z-index: 10;
             background: rgba(255,255,255,0.95);
             padding: 0.5rem;
             border-radius: 0.5rem;
             border: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
         }
         .countdown-section {
             background: linear-gradient(90deg, #bae6fd 0%, #f1f5f9 100%);
@@ -253,13 +250,6 @@
     </style>
 </head>
 <body>
-    <!-- Background Image Settings -->
-    <div class="background-upload">
-        <label class="text-sm text-gray-600">Set Background</label>
-        <input type="file" id="background-upload-input" accept="image/*" class="w-full mb-2 text-sm">
-        <input type="text" id="unsplash-url-input" placeholder="Enter Unsplash image URL" class="w-full mb-2 text-sm">
-        <button onclick="saveBackground()" class="secondary-btn w-full text-sm">Apply</button>
-    </div>
     <div class="container">
         <!-- Login Section -->
         <div id="login-section" class="countdown-section">
@@ -283,6 +273,13 @@
         <p class="text-center text-sm text-gray-600 mb-4">Your central hub for family organization and planning.</p>
         <!-- Main Content -->
         <div id="main-content" class="main-content hidden">
+            <!-- Background Image Settings -->
+            <div class="background-upload">
+                <label class="text-sm text-gray-600">Set Background</label>
+                <input type="file" id="background-upload-input" accept="image/*" class="w-full mb-2 text-sm">
+                <input type="text" id="unsplash-url-input" placeholder="Enter Unsplash image URL" class="w-full mb-2 text-sm">
+                <button onclick="saveBackground()" class="secondary-btn w-full text-sm">Apply</button>
+            </div>
             <!-- Left Column: Person Sections -->
             <div class="left-column">
                 <div class="person-grid">
@@ -433,7 +430,8 @@
         try {
             supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
         } catch (error) {
-            showError('Failed to initialize Supabase: ' + error.message);
+            console.error('Supabase initialization error:', error);
+            showError('Failed to initialize Supabase. Please check console for details.');
         }
 
         let user = null;
@@ -449,13 +447,22 @@
                 return;
             }
             try {
-                const { error } = await supabase.auth.signInWithOtp({ email });
+                console.log('Attempting login with email:', email);
+                const { error } = await supabase.auth.signInWithOtp({ 
+                    email,
+                    options: {
+                        emailRedirectTo: window.location.origin
+                    }
+                });
                 if (error) {
+                    console.error('Login error:', error);
                     showError(`Login error: ${error.message}`);
                 } else {
+                    console.log('OTP sent successfully');
                     showError('Check your email for the login link!');
                 }
             } catch (error) {
+                console.error('Unexpected login error:', error);
                 showError('Login failed: ' + error.message);
             }
         }
@@ -465,6 +472,7 @@
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 user = session?.user ?? null;
+                console.log('Auth check:', user ? 'User logged in' : 'No user');
                 if (user) {
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('main-content').classList.remove('hidden');
@@ -475,6 +483,7 @@
                     document.getElementById('main-content').classList.add('hidden');
                 }
             } catch (error) {
+                console.error('Auth check error:', error);
                 showError('Auth check failed: ' + error.message);
             }
         }
@@ -482,10 +491,12 @@
         // Listen for auth changes
         try {
             supabase.auth.onAuthStateChange((event, session) => {
+                console.log('Auth state change:', event, session);
                 user = session?.user ?? null;
                 checkAuth();
             });
         } catch (error) {
+            console.error('Auth listener error:', error);
             showError('Auth listener failed: ' + error.message);
         }
 
@@ -507,6 +518,7 @@
                 await fetchBackground();
                 updateTodoTagOptions();
             } catch (error) {
+                console.error('Data fetch error:', error);
                 showError('Data fetch failed: ' + error.message);
             }
         }
@@ -517,7 +529,6 @@
                 const { data, error } = await supabase.from('profiles').select('first_name').eq('id', user.id);
                 if (error) throw new Error(`Error fetching names: ${error.message}`);
                 if (data.length === 0) {
-                    // Initialize default names for new user
                     await supabase.from('profiles').insert([
                         { id: user.id, first_name: JSON.stringify(names) }
                     ]);
@@ -528,6 +539,7 @@
                     updateName(i);
                 }
             } catch (error) {
+                console.error('Fetch names error:', error);
                 showError(error.message);
             }
         }
@@ -547,6 +559,7 @@
                 document.getElementById(`person${personId}-name`).classList.remove('hidden');
                 document.getElementById(`person${personId}-edit`).classList.add('hidden');
             } catch (error) {
+                console.error('Save name error:', error);
                 showError(error.message);
             }
         }
@@ -583,6 +596,7 @@
                     renderReminders(i, reminders);
                 }
             } catch (error) {
+                console.error('Fetch reminders error:', error);
                 showError(error.message);
             }
         }
@@ -600,6 +614,7 @@
                     fetchReminders();
                 }
             } catch (error) {
+                console.error('Add reminder error:', error);
                 showError(error.message);
             }
         }
@@ -629,6 +644,7 @@
                 if (error) throw new Error(`Error deleting reminder: ${error.message}`);
                 fetchReminders();
             } catch (error) {
+                console.error('Delete reminder error:', error);
                 showError(error.message);
             }
         }
@@ -640,6 +656,7 @@
                 if (error) throw new Error(`Error fetching todos: ${error.message}`);
                 renderTodos(data);
             } catch (error) {
+                console.error('Fetch todos error:', error);
                 showError(error.message);
             }
         }
@@ -663,6 +680,7 @@
                     fetchTodos();
                 }
             } catch (error) {
+                console.error('Add todo error:', error);
                 showError(error.message);
             }
         }
@@ -677,6 +695,7 @@
                 if (error) throw new Error(`Error toggling todo: ${error.message}`);
                 fetchTodos();
             } catch (error) {
+                console.error('Toggle todo error:', error);
                 showError(error.message);
             }
         }
@@ -687,6 +706,7 @@
                 if (error) throw new Error(`Error deleting todo: ${error.message}`);
                 fetchTodos();
             } catch (error) {
+                console.error('Delete todo error:', error);
                 showError(error.message);
             }
         }
@@ -743,6 +763,7 @@
                 renderCalendar(data);
                 updateCountdown(data);
             } catch (error) {
+                console.error('Fetch events error:', error);
                 showError(error.message);
             }
         }
@@ -783,7 +804,28 @@
                 if (events.some(e => e.date === dateStr)) {
                     div.className += ' event';
                 }
-                div.onclick = () => select”是(event.date === selectedDate);
+                div.onclick = () => selectDate(year, month, i);
+                days.appendChild(div);
+            }
+
+            eventList.innerHTML = events.some(e => e.date === selectedDate)
+                ? ''
+                : `<p class="text-sm text-gray-500">No events for this day.</p>`;
+            events.forEach(event => {
+                if (event.date === selectedDate) {
+                    const div = document.createElement('div');
+                    div.id = `event-${event.id}`;
+                    div.className = 'flex justify-between text-sm text-gray-700';
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = `${event.time || ''} - ${event.title}`;
+                    div.appendChild(textSpan);
+                    const buttons = document.createElement('div');
+                    buttons.className = 'action-buttons';
+                    buttons.innerHTML = `
+                        <button onclick="deleteEvent(${event.id})" class="delete-btn">Delete</button>
+                    `;
+                    div.appendChild(buttons);
+                    eventList.appendChild(div);
                 }
             });
         }
@@ -822,6 +864,7 @@
                     fetchEvents();
                 }
             } catch (error) {
+                console.error('Save event error:', error);
                 showError(error.message);
             }
         }
@@ -832,6 +875,7 @@
                 if (error) throw new Error(`Error deleting event: ${error.message}`);
                 fetchEvents();
             } catch (error) {
+                console.error('Delete event error:', error);
                 showError(error.message);
             }
         }
@@ -853,10 +897,10 @@
                 if (diffDays >= 0 && diffDays <= 5) {
                     hasUpcomingEvent = true;
                     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) % (1000 * 60)));
-                    const diffSeconds = Math.floor((diffMs % (1000 * 60)) % (1000));
+                    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
                     countdownTitle.textContent = `Upcoming: ${event.title}`;
-                    countdownList.textContent = `${String(diffDays).padStart(2, '0')}d ${String(diffHours).padStart(2, '0')}h ${String(diffMinutes)}m ${String(diffSeconds)}s`;
+                    countdownList.textContent = `${String(diffDays).padStart(2, '0')}d ${String(diffHours).padStart(2, '0')}h ${String(diffMinutes).padStart(2, '0')}m ${String(diffSeconds).padStart(2, '0')}s`;
                 }
             });
 
@@ -874,16 +918,15 @@
                 if (error) throw new Error(`Error fetching background: ${error.message}`);
                 if (data.background_url) {
                     if (data.background_url.startsWith('https://')) {
-                        // Unsplash URL
                         document.body.style.backgroundImage = `url(${data.background_url})`;
                     } else {
-                        // Supabase Storage
                         const { data: signedUrl } = await supabase.storage.from('backgrounds').createSignedUrl(data.background_url, 3600);
-                        if (signedUrl.error) throw signedUrl.error(signedUrl.error.message);
+                        if (signedUrl.error) throw new Error(signedUrl.error.message);
                         document.body.style.backgroundImage = `url(${signedUrl.signedUrl})`;
                     }
                 }
             } catch (error) {
+                console.error('Fetch background error:', error);
                 showError(error.message);
             }
         }
@@ -895,30 +938,28 @@
                 let backgroundUrl = null;
 
                 if (fileInput.files && fileInput.files[0]) {
-                    // Upload to Supabase Storage
                     const file = fileInput.files[0];
                     const fileName = `background_${Date.now()}_${file.name}`;
                     const { error: uploadError } = await supabase.storage.from('backgrounds').upload(fileName, file, { upsert: true });
                     if (uploadError) throw new Error(`Error uploading file: ${uploadError.message}`);
                     backgroundUrl = fileName;
                 } else if (urlInput && urlInput.startsWith('https://')) {
-                    // Save Unsplash URL
                     backgroundUrl = urlInput;
                 } else {
                     showError('Please select an image file or enter a valid Unsplash URL.');
                     return;
                 }
 
-                // Update settings table
                 const { error } = await supabase
                     .from('settings')
                     .update({ background_url: backgroundUrl, updated_at: new Date().toISOString() })
                     .eq('id', 1);
                 if (error) throw new Error(`Error saving background: ${error.message}`);
                 fileInput.value = '';
-                urlInput.value = '';
+                document.getElementById('unsplash-url-input').value = '';
                 fetchBackground();
             } catch (error) {
+                console.error('Save background error:', error);
                 showError(error.message);
             }
         }
@@ -943,25 +984,26 @@
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, fetchBackground)
                     .subscribe();
             } catch (error) {
-                showError(error.message);
+                console.error('Subscriptions error:', error);
+                showError('Subscriptions failed: ' + error.message);
             }
         }
 
         // On page load
         window.onload = async function() {
             try {
+                console.log('Page loaded');
                 await checkAuth();
                 document.getElementById('background-upload-input').addEventListener('change', saveBackground);
                 document.body.style.backgroundImage = 'url(https://source.unsplash.com/random/1920x1080)';
-                loadBackground();
                 setInterval(() => {
                     if (user) fetchEvents(); // Refresh events for countdown
                 }, 1000);
             } catch (error) {
-                showError(error.message);
+                console.error('Page load error:', error);
+                showError('Page load failed: ' + error.message);
             }
         };
     </script>
 </body>
 </html>
-```
