@@ -27,7 +27,7 @@
             flex-wrap: wrap;
         }
         .left-column {
-            flex: 2;
+            flex: 3;
             display: flex;
             flex-direction: column;
             gap: 2rem;
@@ -37,10 +37,11 @@
             display: flex;
             flex-direction: column;
             gap: 2rem;
+            min-width: 250px;
         }
         .person-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr; /* Stack vertically: 4 rows, 1 column */
             gap: 2rem;
         }
         .person-section, .todo-section, .calendar-section {
@@ -54,7 +55,8 @@
             min-width: 0;
         }
         .todo-section {
-            height: fit-content;
+            height: 100%; /* Take full height of right column */
+            min-height: 500px; /* Minimum height to ensure visibility */
         }
         .completed {
             text-decoration: line-through;
@@ -200,7 +202,7 @@
             padding: 0.5rem;
             border-radius: 0.5rem;
             border: 1px solid #e5e7eb;
-            margin-bottom: 1rem;
+            margin-top: 2rem;
         }
         .countdown-section {
             background: linear-gradient(90deg, #bae6fd 0%, #f1f5f9 100%);
@@ -243,8 +245,11 @@
             .main-content {
                 flex-direction: column;
             }
-            .person-grid {
-                grid-template-columns: 1fr;
+            .right-column {
+                min-width: 100%;
+            }
+            .todo-section {
+                min-height: 300px; /* Adjust for smaller screens */
             }
         }
     </style>
@@ -267,14 +272,7 @@
         <p class="text-center text-sm text-gray-600 mb-4">Your central hub for family organization and planning.</p>
         <!-- Main Content -->
         <div id="main-content" class="main-content">
-            <!-- Background Image Settings -->
-            <div class="background-upload">
-                <label class="text-sm text-gray-600">Set Background</label>
-                <input type="file" id="background-upload-input" accept="image/*" class="w-full mb-2 text-sm">
-                <input type="text" id="unsplash-url-input" placeholder="Enter Unsplash image URL" class="w-full mb-2 text-sm">
-                <button onclick="saveBackground()" class="secondary-btn w-full text-sm">Apply</button>
-            </div>
-            <!-- Left Column: Person Sections -->
+            <!-- Left Column: Person Sections and Calendar -->
             <div class="left-column">
                 <div class="person-grid">
                     <!-- Person 1 -->
@@ -350,7 +348,7 @@
                         <button onclick="addReminder(4)" class="secondary-btn w-full mt-2">Add</button>
                     </div>
                 </div>
-                <!-- Calendar: Aligned at the bottom -->
+                <!-- Calendar: Below Person Sections -->
                 <div class="calendar-section mt-4">
                     <div class="flex mb-2">
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -413,6 +411,13 @@
                     <ul id="todo-list" class="mt-2 space-y-2"></ul>
                 </div>
             </div>
+        </div>
+        <!-- Background Image Settings: At the Bottom -->
+        <div class="background-upload">
+            <label class="text-sm text-gray-600">Set Background</label>
+            <input type="file" id="background-upload-input" accept="image/*" class="w-full mb-2 text-sm">
+            <input type="text" id="unsplash-url-input" placeholder="Enter Unsplash image URL" class="w-full mb-2 text-sm">
+            <button onclick="saveBackground()" class="secondary-btn w-full text-sm">Apply</button>
         </div>
         <div id="error-message" class="error-message hidden"></div>
     </div>
@@ -530,14 +535,14 @@
             document.getElementById(`person${personId}-name-input`).value = names[personId];
         }
 
-        async function updateTodoTagNames() {
-            const tagNames = document.getElementById('todo-tag');
-            tagNames.innerHTML = '<option value="">Tag People (Optional)</option>';
+        async function updateTodoTagOptions() {
+            const tagSelect = document.getElementById('todo-tag');
+            tagSelect.innerHTML = '<option value="">Tag People (Optional)</option>';
             for (let i = 1; i <= 4; i++) {
                 const option = document.createElement('option');
                 option.value = names[i];
                 option.textContent = names[i];
-                tagNames.appendChild(option);
+                tagSelect.appendChild(option);
             }
         }
 
@@ -679,7 +684,7 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = todo.completed;
-                checkbox.className = 'mr-2 h-4 w-4';
+                checkbox.className = 'mr-2';
                 checkbox.onclick = () => toggleTodo(todo.id);
                 const textSpan = document.createElement('span');
                 textSpan.textContent = todo.title;
@@ -689,7 +694,7 @@
                 leftDiv.appendChild(textSpan);
                 if (todo.tags) {
                     const tagSpan = document.createElement('div');
-                    tagSpan.className = 'flex ml-6 space-x-1';
+                    tagSpan.className = 'flex flex-wrap ml-2 space-x-1';
                     const tags = todo.tags.split(',').map(t => t.trim());
                     tags.forEach(tag => {
                         const tagDiv = document.createElement('div');
@@ -771,15 +776,12 @@
                     const div = document.createElement('div');
                     div.id = `event-${event.id}`;
                     div.className = 'flex justify-between text-sm text-gray-700';
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = `${event.time || ''} - ${event.title}`;
-                    div.appendChild(textSpan);
-                    const buttons = document.createElement('div');
-                    buttons.className = 'action-buttons';
-                    buttons.innerHTML = `
-                        <button onclick="deleteEvent(${event.id})" class="delete-btn">Delete</button>
+                    div.innerHTML = `
+                        <span>${event.time || ''} - ${event.title}</span>
+                        <div class="action-buttons">
+                            <button onclick="deleteEvent(${event.id})" class="delete-btn">Delete</button>
+                        </div>
                     `;
-                    div.appendChild(buttons);
                     eventList.appendChild(div);
                 }
             });
