@@ -481,13 +481,20 @@
                 return;
             }
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) {
+                    console.error('Get session error:', error.message);
+                    throw new Error(`Failed to get session: ${error.message}`);
+                }
                 user = session?.user ?? null;
-                console.log('Auth check:', user ? 'User logged in' : 'No user');
+                console.log('Auth check:', user ? `User logged in: ${user.email}` : 'No user');
                 if (user) {
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('main-content').classList.remove('hidden');
-                    fetchData();
+                    fetchData().catch(err => {
+                        console.error('Post-login data fetch failed:', err.message);
+                        showError('Some data failed to load. You can still use the app.');
+                    });
                     setupSubscriptions();
                 } else {
                     document.getElementById('login-section').classList.remove('hidden');
@@ -503,7 +510,7 @@
         try {
             if (supabase) {
                 supabase.auth.onAuthStateChange((event, session) => {
-                    console.log('Auth state change:', event, session);
+                    console.log('Auth state change:', event, session ? `User: ${session.user?.email}` : 'No session');
                     user = session?.user ?? null;
                     checkAuth();
                 });
@@ -531,15 +538,18 @@
                 return;
             }
             try {
-                await fetchNames();
-                await fetchReminders();
-                await fetchTodos();
-                await fetchEvents();
-                await fetchBackground();
-                updateTodoTagOptions();
+                // Fetch each data type independently to prevent one failure from blocking others
+                await Promise.allSettled([
+                    fetchNames().catch(err => console.error('Fetch names failed:', err.message)),
+                    fetchReminders().catch(err => console.error('Fetch reminders failed:', err.message)),
+                    fetchTodos().catch(err => console.error('Fetch todos failed:', err.message)),
+                    fetchEvents().catch(err => console.error('Fetch events failed:', err.message)),
+                    fetchBackground().catch(err => console.error('Fetch background failed:', err.message))
+                ]);
+                await updateTodoTagOptions();
             } catch (error) {
                 console.error('Data fetch error:', error.message);
-                showError('Data fetch failed: ' + error.message);
+                showError('Some data failed to load: ' + error.message);
             }
         }
 
@@ -549,9 +559,10 @@
                 const { data, error } = await supabase.from('profiles').select('first_name').eq('id', user.id);
                 if (error) throw new Error(`Error fetching names: ${error.message}`);
                 if (data.length === 0) {
-                    await supabase.from('profiles').insert([
+                    const { error: insertError } = await supabase.from('profiles').insert([
                         { id: user.id, first_name: JSON.stringify(names) }
                     ]);
+                    if (insertError) throw new Error(`Error inserting names: ${insertError.message}`);
                 } else {
                     names = JSON.parse(data[0].first_name);
                 }
@@ -560,7 +571,7 @@
                 }
             } catch (error) {
                 console.error('Fetch names error:', error.message);
-                showError(error.message);
+                throw error;
             }
         }
 
@@ -617,7 +628,7 @@
                 }
             } catch (error) {
                 console.error('Fetch reminders error:', error.message);
-                showError(error.message);
+                throw error;
             }
         }
 
@@ -677,7 +688,7 @@
                 renderTodos(data);
             } catch (error) {
                 console.error('Fetch todos error:', error.message);
-                showError(error.message);
+                throw error;
             }
         }
 
@@ -784,7 +795,7 @@
                 updateCountdown(data);
             } catch (error) {
                 console.error('Fetch events error:', error.message);
-                showError(error.message);
+                throw error;
             }
         }
 
@@ -936,18 +947,18 @@
             try {
                 const { data, error } = await supabase.from('settings').select('background_url').eq('id', 1).single();
                 if (error) throw new Error(`Error fetching background: ${error.message}`);
-                if (data.background_url) {
+                if (data && data.background_url) {
                     if (data.background_url.startsWith('https://')) {
                         document.body.style.backgroundImage = `url(${data.background_url})`;
                     } else {
-                        const { data: signedUrl } = await supabase.storage.from('backgrounds').createSignedUrl(data.background_url, 3600);
-                        if (signedUrl.error) throw new Error(signedUrl.error.message);
-                        document.body.style.backgroundImage = `url(${signedUrl.signedUrl})`;
+                        const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from('backgrounds').createSignedUrl(data.background_url, 3600);
+                        if (signedUrlError) throw new Error(`Error creating signed URL: ${signedUrlError.message}`);
+                        document.body.style.backgroundImage = `url(${signedUrlData.signedUrl})`;
                     }
                 }
             } catch (error) {
                 console.error('Fetch background error:', error.message);
-                showError(error.message);
+                throw error;
             }
         }
 
@@ -970,11 +981,24 @@
                     return;
                 }
 
-                const { error } = await supabase
-                    .from('settings')
-                    .update({ background_url: backgroundUrl, updated_at: new Date().toISOString() })
-                    .eq('id', 1);
-                if (error) throw new Error(`Error saving background: ${error.message}`);
+                const { data, error: fetchError } = await supabase.from('settings').select('*').eq('id', 1).single();
+                if (fetchError) throw new Error(`Error fetching settings: ${fetchError.message}`);
+
+                let updateError;
+                if (data) {
+                    const { error } = await supabase
+                        .from('settings')
+                        .update({ background_url: backgroundUrl, updated_at: new Date().toISOString() })
+                        .eq('id', 1);
+                    updateError = error;
+                } else {
+                    const { error } = await supabase
+                        .from('settings')
+                        .insert({ id: 1, background_url: backgroundUrl, updated_at: new Date().toISOString() });
+                    updateError = error;
+                }
+
+                if (updateError) throw new Error(`Error saving background: ${updateError.message}`);
                 fileInput.value = '';
                 document.getElementById('unsplash-url-input').value = '';
                 fetchBackground();
@@ -994,20 +1018,32 @@
             try {
                 supabase
                     .channel('reminders')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'reminders' }, fetchReminders)
-                    .subscribe();
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'reminders' }, () => {
+                        console.log('Reminders table changed');
+                        fetchReminders();
+                    })
+                    .subscribe((status) => console.log('Reminders subscription status:', status));
                 supabase
                     .channel('tasks')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchTodos)
-                    .subscribe();
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+                        console.log('Tasks table changed');
+                        fetchTodos();
+                    })
+                    .subscribe((status) => console.log('Tasks subscription status:', status));
                 supabase
                     .channel('events')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, fetchEvents)
-                    .subscribe();
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
+                        console.log('Events table changed');
+                        fetchEvents();
+                    })
+                    .subscribe((status) => console.log('Events subscription status:', status));
                 supabase
                     .channel('settings')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, fetchBackground)
-                    .subscribe();
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
+                        console.log('Settings table changed');
+                        fetchBackground();
+                    })
+                    .subscribe((status) => console.log('Settings subscription status:', status));
             } catch (error) {
                 console.error('Subscriptions error:', error.message);
                 showError('Subscriptions failed: ' + error.message);
@@ -1017,7 +1053,7 @@
         // On page load
         window.onload = async function() {
             try {
-                console.log('Page loaded');
+                console.log('Page loaded at:', new Date().toISOString());
                 await checkAuth();
                 document.getElementById('background-upload-input').addEventListener('change', saveBackground);
                 document.body.style.backgroundImage = 'url(https://source.unsplash.com/random/1920x1080)';
