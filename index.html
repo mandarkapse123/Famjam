@@ -299,7 +299,7 @@
                     <div class="person-section">
                         <div class="flex justify-between mb-2">
                             <div class="flex">
-                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 <h2 id="person2-name" class="text-lg font-semibold text-gray-800"></h2>
                             </div>
                             <button onclick="editName(2)" class="edit-btn">Edit</button>
@@ -418,8 +418,8 @@
     </div>
     <script>
         // Initialize Supabase client
-        const supabaseUrl = 'https://mwoadutjvppiqcktnitn.supabase.co'; // Replace with your Supabase Project URL
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13b2FkdXRqdnBwaXFja3RuaXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTU1NTksImV4cCI6MjA2NDI5MTU1OX0.jU-FLwStIMe7I4Sx44YNih_DYGTpty_KXatq8sMzowA'; // Replace with your Supabase Anon Key
+        const supabaseUrl = 'https://mwoadutjvppiqcktnitn.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13b2FkdXRqdnBwaXFja3RuaXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTU1NTksImV4cCI6MjA2NDI5MTU1OX0.jU-FLwStIMe7I4Sx44YNih_DYGTpty_KXatq8sMzowA';
         let supabase = null;
         try {
             supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
@@ -530,14 +530,14 @@
             document.getElementById(`person${personId}-name-input`).value = names[personId];
         }
 
-        async function updateTodoTagOptions() {
-            const tagSelect = document.getElementById('todo-tag');
-            tagSelect.innerHTML = '<option value="">Tag People (Optional)</option>';
+        async function updateTodoTagNames() {
+            const tagNames = document.getElementById('todo-tag');
+            tagNames.innerHTML = '<option value="">Tag People (Optional)</option>';
             for (let i = 1; i <= 4; i++) {
                 const option = document.createElement('option');
                 option.value = names[i];
                 option.textContent = names[i];
-                tagSelect.appendChild(option);
+                tagNames.appendChild(option);
             }
         }
 
@@ -759,7 +759,7 @@
                 if (events.some(e => e.date === dateStr)) {
                     div.className += ' event';
                 }
-                div.onclick = () => selectDate(year, month, i);
+                div.onclick = () => selectDate(dateStr);
                 days.appendChild(div);
             }
 
@@ -795,8 +795,8 @@
             fetchEvents();
         }
 
-        function selectDate(year, month, day) {
-            selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
             fetchEvents();
         }
 
