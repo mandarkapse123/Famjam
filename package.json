@@ -1,0 +1,6 @@
+{
+  "name": "family-hq",
+  "dependencies": {
+    "@googleapis/sheets": "^8.0.0"
+  }
+}
