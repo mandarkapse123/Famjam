@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family HQ - Enhanced</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #3b82f6;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #1f2937;
+            --bg-secondary: #111827;
+            --border-color: #374151;
+            --glass-bg: rgba(31, 41, 55, 0.25);
+            --glass-border: rgba(75, 85, 99, 0.18);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 90rem;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header-enhanced {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header-enhanced h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0.5rem 0;
+        }
+
+        .header-enhanced p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            border: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .left-column {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 250px;
+        }
+
+        .person-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .person-section, .todo-section, .calendar-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .person-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-accent);
+        }
+
+        .todo-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-secondary);
+        }
+
+        .calendar-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .person-section:hover, .todo-section:hover, .calendar-section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .todo-section {
+            min-height: 500px;
+        }
+
+        .calendar-section {
+            margin-top: 2rem;
+        }
+
+        .calendar-header-row, .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-header-row {
+            margin-bottom: 0.5rem;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 1rem 0.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            background: var(--bg-primary);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .calendar-day.header {
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            cursor: default;
+            padding: 0.75rem 0.2rem;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .calendar-day:hover:not(.header):not(.empty) {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.today {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--warning-color);
+            border-radius: 50%;
+        }
+
+        .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .secondary-btn {
+            background: var(--bg-primary);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .secondary-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        input, select {
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            width: 100%;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .edit-btn, .delete-btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: var(--bg-primary);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .delete-btn {
+            color: var(--danger-color);
+            background: #fee2e2;
+            border-color: #fecaca;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .background-upload {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--glass-border);
+            margin-top: 2rem;
+        }
+
+        .countdown-section {
+            background: var(--gradient-primary);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #fee2e2;
+            border-radius: 0.75rem;
+        }
+
+        /* Utility Classes */
+        .flex { display: flex; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .w-full { width: 100%; }
+        .hidden { display: none; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .text-gray-800 { color: var(--text-primary); }
+        .text-gray-600 { color: var(--text-secondary); }
+        .text-gray-700 { color: var(--text-primary); }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .todo-tags {
+            display: flex;
+            flex-direction: column;
+            margin-top: 0.25rem;
+            margin-left: 1.5rem;
+        }
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header-enhanced h1 { font-size: 2rem; }
+            .nav-tabs { flex-wrap: wrap; gap: 0.5rem; }
+            .nav-tab { padding: 0.5rem 1rem; font-size: 0.875rem; }
+            .main-content { flex-direction: column; }
+            .right-column { min-width: 100%; }
+            .person-grid { grid-template-columns: 1fr; }
+            .theme-toggle { top: 1rem; right: 1rem; width: 2.5rem; height: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+        <svg id="theme-icon" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+    </button>
+
+    <div class="container">
+        <!-- Enhanced Header -->
+        <header class="header-enhanced">
+            <h1>Family HQ</h1>
+            <p>Your central hub for family organization and planning</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Dashboard
+            </button>
+            <button class="nav-tab" onclick="switchTab('goals')">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Goals
+            </button>
+            <button class="nav-tab" onclick="switchTab('settings')">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Settings
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content active">
+            <!-- Countdown -->
+            <div id="countdown-section" class="countdown-section hidden">
+                <div class="flex justify-center mb-1">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <h2 id="countdown-title" class="text-sm font-medium text-gray-800"></h2>
+                </div>
+                <div id="countdown-list" class="text-lg font-semibold text-gray-800"></div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <div class="person-grid">
+                        <!-- Person 1 -->
+                        <div class="person-section">
+                            <div class="flex justify-between mb-2">
+                                <div class="flex">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    <h2 id="person1-name" class="text-lg font-semibold text-gray-800"></h2>
+                                </div>
+                                <button onclick="editName(1)" class="edit-btn">Edit</button>
+                            </div>
+                            <div id="person1-edit" class="hidden mb-2">
+                                <input type="text" id="person1-name-input" class="w-full" placeholder="Enter name">
+                                <button onclick="saveName(1)" class="secondary-btn w-full mt-2">Save</button>
+                            </div>
+                            <h3 class="text-sm text-gray-600 mb-2">Daily Reminders</h3>
+                            <ul id="reminder1-list" class="space-y-1 text-gray-700 text-sm"></ul>
+                            <input type="text" id="reminder1-input" placeholder="Add reminder" class="w-full text-sm">
+                            <button onclick="addReminder(1)" class="secondary-btn w-full mt-2">Add</button>
+                        </div>
+
+                        <!-- Person 2 -->
+                        <div class="person-section">
+                            <div class="flex justify-between mb-2">
+                                <div class="flex">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    <h2 id="person2-name" class="text-lg font-semibold text-gray-800"></h2>
+                                </div>
+                                <button onclick="editName(2)" class="edit-btn">Edit</button>
+                            </div>
+                            <div id="person2-edit" class="hidden mb-2">
+                                <input type="text" id="person2-name-input" class="w-full" placeholder="Enter name">
+                                <button onclick="saveName(2)" class="secondary-btn w-full mt-2">Save</button>
+                            </div>
+                            <h3 class="text-sm text-gray-600 mb-2">Daily Reminders</h3>
+                            <ul id="reminder2-list" class="space-y-1 text-gray-700 text-sm"></ul>
+                            <input type="text" id="reminder2-input" placeholder="Add reminder" class="w-full text-sm">
+                            <button onclick="addReminder(2)" class="secondary-btn w-full mt-2">Add</button>
+                        </div>
+
+                        <!-- Person 3 -->
+                        <div class="person-section">
+                            <div class="flex justify-between mb-2">
+                                <div class="flex">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    <h2 id="person3-name" class="text-lg font-semibold text-gray-800"></h2>
+                                </div>
+                                <button onclick="editName(3)" class="edit-btn">Edit</button>
+                            </div>
+                            <div id="person3-edit" class="hidden mb-2">
+                                <input type="text" id="person3-name-input" class="w-full" placeholder="Enter name">
+                                <button onclick="saveName(3)" class="secondary-btn w-full mt-2">Save</button>
+                            </div>
+                            <h3 class="text-sm text-gray-600 mb-2">Daily Reminders</h3>
+                            <ul id="reminder3-list" class="space-y-1 text-gray-700 text-sm"></ul>
+                            <input type="text" id="reminder3-input" placeholder="Add reminder" class="w-full text-sm">
+                            <button onclick="addReminder(3)" class="secondary-btn w-full mt-2">Add</button>
+                        </div>
+
+                        <!-- Person 4 -->
+                        <div class="person-section">
+                            <div class="flex justify-between mb-2">
+                                <div class="flex">
+                                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    <h2 id="person4-name" class="text-lg font-semibold text-gray-800"></h2>
+                                </div>
+                                <button onclick="editName(4)" class="edit-btn">Edit</button>
+                            </div>
+                            <div id="person4-edit" class="hidden mb-2">
+                                <input type="text" id="person4-name-input" class="w-full" placeholder="Enter name">
+                                <button onclick="saveName(4)" class="secondary-btn w-full mt-2">Save</button>
+                            </div>
+                            <h3 class="text-sm text-gray-600 mb-2">Daily Reminders</h3>
+                            <ul id="reminder4-list" class="space-y-1 text-gray-700 text-sm"></ul>
+                            <input type="text" id="reminder4-input" placeholder="Add reminder" class="w-full text-sm">
+                            <button onclick="addReminder(4)" class="secondary-btn w-full mt-2">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Section -->
+                    <div class="calendar-section">
+                        <div class="flex mb-2">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <h2 class="text-lg font-semibold text-gray-800">Family Calendar</h2>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <h3 id="calendar-title" class="text-xl font-semibold"></h3>
+                            <div class="flex gap-2">
+                                <button onclick="prevMonth()" class="secondary-btn" style="padding:0.25rem 0.75rem;">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                </button>
+                                <button onclick="nextMonth()" class="secondary-btn" style="padding:0.25rem 0.75rem;">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calendar-header-row">
+                            <div class="calendar-day header">Su</div>
+                            <div class="calendar-day header">Mo</div>
+                            <div class="calendar-day header">Tu</div>
+                            <div class="calendar-day header">We</div>
+                            <div class="calendar-day header">Th</div>
+                            <div class="calendar-day header">Fr</div>
+                            <div class="calendar-day header">Sa</div>
+                        </div>
+                        <div id="calendar-days" class="calendar-grid"></div>
+                        <button onclick="showEventForm()" class="secondary-btn w-full mt-2">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Event
+                        </button>
+                        <div id="event-form" class="hidden mt-2">
+                            <input type="text" id="event-title" placeholder="Event title" class="w-full mb-2">
+                            <input type="time" id="event-time" class="w-full mb-2">
+                            <button onclick="saveEvent()" class="secondary-btn w-full">Save Event</button>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-sm text-gray-600 mb-2">Events for <span id="selected-date-text"></span></h3>
+                            <div id="event-list" class="space-y-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Todo List -->
+                <div class="right-column">
+                    <div class="todo-section">
+                        <div class="flex mb-2">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h2 class="text-lg font-semibold text-gray-800">To-Do List</h2>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" id="todo-input" placeholder="Add new to-do..." class="w-full mb-2 text-sm">
+                            <select id="todo-tag" multiple class="w-full text-sm">
+                                <option value="">Tag People (Optional)</option>
+                            </select>
+                        </div>
+                        <button onclick="addTodo()" class="secondary-btn w-full">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add To-Do
+                        </button>
+                        <ul id="todo-list" class="mt-2 space-y-2"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Tab -->
+        <div id="goals-tab" class="tab-content">
+            <div class="person-section">
+                <h2 class="text-xl font-semibold mb-4">🎯 Goals & Progress Tracking</h2>
+                <p class="text-gray-600 mb-4">Set and track your family goals here. This feature is coming soon!</p>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg border">
+                        <h3 class="font-semibold text-lg">Sample Goal: Family Vacation Fund</h3>
+                        <div class="mt-2">
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">65% Complete - $3,250 of $5,000</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border">
+                        <h3 class="font-semibold text-lg">Sample Goal: Read 50 Books This Year</h3>
+                        <div class="mt-2">
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 40%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">40% Complete - 20 of 50 books</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="background-upload">
+                <div class="flex mb-2">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <h2 class="text-lg font-semibold text-gray-800">Background Settings</h2>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Background Image</label>
+                    <input type="file" id="background-upload-input" accept="image/*" class="w-full">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Or use Unsplash URL</label>
+                    <input type="url" id="unsplash-url-input" placeholder="https://source.unsplash.com/1920x1080/?nature" class="w-full">
+                </div>
+                <button onclick="saveBackground()" class="secondary-btn w-full">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Save Background
+                </button>
+                <div id="error-message" class="error-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ixqjqjqjqjqjqjqjqjqj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4cWpxanFqcWpxanFqcWpxanFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MzI4MDAsImV4cCI6MjA1MDEwODgwMH0.abc123def456ghi789jkl012mno345pqr678stu901vwx234yz';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global variables
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        let events = [];
+        let names = { 1: 'Mandar', 2: 'Madhura', 3: 'Pankaj', 4: 'Agastya' };
+
+        // Theme Toggle Functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            icon.style.transform = 'scale(0)';
+            
+            setTimeout(() => {
+                if (newTheme === 'dark') {
+                    icon.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+                } else {
+                    icon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+                }
+                icon.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        // Initialize theme on page load
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            if (savedTheme === 'dark') {
+                const icon = document.getElementById('theme-icon');
+                icon.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+            }
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.closest('.nav-tab').classList.add('active');
+        }
+
+        // Enhanced notification system
+        function showNotification(message, type = 'info') {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                left: 50%;
+                transform: translateX(-50%) translateY(-100px);
+                background: var(--glass-bg);
+                backdrop-filter: blur(16px);
+                border: 1px solid var(--glass-border);
+                border-radius: 1rem;
+                padding: 1rem 2rem;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                z-index: 1001;
+                color: var(--text-primary);
+                font-weight: 500;
+                transition: all 0.3s ease;
+                max-width: 400px;
+                text-align: center;
+            `;
+            
+            if (type === 'error') {
+                notification.style.borderColor = 'var(--danger-color)';
+                notification.style.color = 'var(--danger-color)';
+            } else if (type === 'success') {
+                notification.style.borderColor = 'var(--accent-color)';
+                notification.style.color = 'var(--accent-color)';
+            }
+
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: inherit; cursor: pointer; font-size: 1.2rem; padding: 0; width: 20px; height: 20px;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.transform = 'translateX(-50%) translateY(-100px)';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        // Error handling
+        function handleError(error, context) {
+            console.error(`Error in ${context}:`, error);
+            showError(`${context}: ${error.message}`);
+        }
+
+        // Name management
+        async function editName(personId) {
+            const nameElement = document.getElementById(`person${personId}-name`);
+            const editElement = document.getElementById(`person${personId}-edit`);
+            const inputElement = document.getElementById(`person${personId}-name-input`);
+            
+            nameElement.style.display = 'none';
+            editElement.classList.remove('hidden');
+            inputElement.value = names[personId];
+            inputElement.focus();
+        }
+
+        async function saveName(personId) {
+            try {
+                const inputElement = document.getElementById(`person${personId}-name-input`);
+                const newName = inputElement.value.trim();
+                
+                if (!newName) {
+                    showError('Name cannot be empty');
+                    return;
+                }
+                
+                const { error } = await supabase.from('names').upsert([
+                    { person_id: personId, name: newName }
+                ]);
+                
+                if (error) throw error;
+                
+                names[personId] = newName;
+                document.getElementById(`person${personId}-name`).textContent = newName;
+                document.getElementById(`person${personId}-name`).style.display = 'block';
+                document.getElementById(`person${personId}-edit`).classList.add('hidden');
+                
+                await updateTodoTags();
+                showSuccess(`Name updated to ${newName}!`);
+                
+            } catch (error) {
+                handleError(error, 'Save name');
+            }
+        }
+
+        // Reminder management
+        async function addReminder(personId) {
+            try {
+                const input = document.getElementById(`reminder${personId}-input`);
+                const reminderText = input.value.trim();
+                
+                if (!reminderText) {
+                    showError('Please enter a reminder text');
+                    return;
+                }
+                
+                const { error } = await supabase.from('reminders').insert([
+                    { person_id: personId, title: reminderText }
+                ]);
+                
+                if (error) throw error;
+                
+                input.value = '';
+                await fetchReminders();
+                showSuccess(`Reminder added for ${names[personId]}!`);
+                
+            } catch (error) {
+                handleError(error, 'Add reminder');
+            }
+        }
+
+        async function deleteReminder(id) {
+            try {
+                const { error } = await supabase.from('reminders').delete().eq('id', id);
+                if (error) throw error;
+                
+                await fetchReminders();
+                showSuccess('Reminder deleted!');
+                
+            } catch (error) {
+                handleError(error, 'Delete reminder');
+            }
+        }
+
+        async function fetchReminders() {
+            try {
+                const { data, error } = await supabase.from('reminders').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                for (let i = 1; i <= 4; i++) {
+                    const list = document.getElementById(`reminder${i}-list`);
+                    list.innerHTML = '';
+                    
+                    const personReminders = data.filter(reminder => reminder.person_id === i);
+                    personReminders.forEach(reminder => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <span>${reminder.title}</span>
+                                <button onclick="deleteReminder(${reminder.id})" class="delete-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Delete</button>
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+                
+            } catch (error) {
+                handleError(error, 'Fetch reminders');
+            }
+        }
+
+        // Todo management
+        async function addTodo() {
+            try {
+                const input = document.getElementById('todo-input');
+                const tagSelect = document.getElementById('todo-tag');
+                const todoText = input.value.trim();
+                
+                if (!todoText) {
+                    showError('Please enter a todo item');
+                    return;
+                }
+                
+                const selectedTags = Array.from(tagSelect.selectedOptions)
+                    .map(option => option.value)
+                    .filter(value => value !== '')
+                    .join(',');
+                
+                const { error } = await supabase.from('tasks').insert([
+                    { title: todoText, tags: selectedTags, completed: false }
+                ]);
+                
+                if (error) throw error;
+                
+                input.value = '';
+                tagSelect.value = '';
+                await fetchTodos();
+                
+                const tagText = selectedTags ? ` (assigned to ${selectedTags})` : '';
+                showSuccess(`Todo added successfully${tagText}!`);
+                
+            } catch (error) {
+                handleError(error, 'Add todo');
+            }
+        }
+
+        async function toggleTodo(id, completed) {
+            try {
+                const { error } = await supabase.from('tasks').update({ completed }).eq('id', id);
+                if (error) throw error;
+                
+                await fetchTodos();
+                
+            } catch (error) {
+                handleError(error, 'Toggle todo');
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                const { error } = await supabase.from('tasks').delete().eq('id', id);
+                if (error) throw error;
+                
+                await fetchTodos();
+                showSuccess('Todo deleted!');
+                
+            } catch (error) {
+                handleError(error, 'Delete todo');
+            }
+        }
+
+        async function fetchTodos() {
+            try {
+                const { data, error } = await supabase.from('tasks').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                const todoList = document.getElementById('todo-list');
+                todoList.innerHTML = '';
+                
+                data.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = todo.completed ? 'completed' : '';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                                       onchange="toggleTodo(${todo.id}, this.checked)" 
+                                       class="mr-2">
+                                <span>${todo.title}</span>
+                            </div>
+                            <button onclick="deleteTodo(${todo.id})" class="delete-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Delete</button>
+                        </div>
+                        ${todo.tags ? `<div class="todo-tags"><small class="text-gray-500">Tagged: ${todo.tags}</small></div>` : ''}
+                    `;
+                    todoList.appendChild(li);
+                });
+                
+            } catch (error) {
+                handleError(error, 'Fetch todos');
+            }
+        }
+
+        async function updateTodoTags() {
+            const tagSelect = document.getElementById('todo-tag');
+            tagSelect.innerHTML = '<option value="">Tag People (Optional)</option>';
+            
+            Object.entries(names).forEach(([id, name]) => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                tagSelect.appendChild(option);
+            });
+        }
+
+        // Calendar functions
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            const calendarTitle = document.getElementById('calendar-title');
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            calendarTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            
+            calendarDays.innerHTML = '';
+            
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                dayElement.onclick = () => selectDate(day);
+                
+                const currentDate = new Date(currentYear, currentMonth, day);
+                const dateString = currentDate.toISOString().split('T')[0];
+                
+                if (today.toDateString() === currentDate.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                if (events.some(event => event.date === dateString)) {
+                    dayElement.classList.add('event');
+                }
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function selectDate(day) {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            selectedDate = new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
+            document.getElementById('selected-date-text').textContent = 
+                new Date(currentYear, currentMonth, day).toLocaleDateString();
+            
+            displayEventsForDate(selectedDate);
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function showEventForm() {
+            if (!selectedDate) {
+                showError('Please select a date first');
+                return;
+            }
+            document.getElementById('event-form').classList.remove('hidden');
+        }
+
+        async function saveEvent() {
+            try {
+                const title = document.getElementById('event-title').value.trim();
+                const time = document.getElementById('event-time').value;
+                
+                if (!title) {
+                    showError('Please enter an event title');
+                    return;
+                }
+                
+                if (!selectedDate) {
+                    showError('Please select a date');
+                    return;
+                }
+                
+                const { error } = await supabase.from('events').insert([
+                    { title, date: selectedDate, time }
+                ]);
+                
+                if (error) throw error;
+                
+                document.getElementById('event-form').classList.add('hidden');
+                document.getElementById('event-title').value = '';
+                document.getElementById('event-time').value = '';
+                
+                await fetchEvents();
+                showSuccess(`Event "${title}" added successfully!`);
+                
+            } catch (error) {
+                handleError(error, 'Save event');
+            }
+        }
+
+        async function deleteEvent(id) {
+            try {
+                const { error } = await supabase.from('events').delete().eq('id', id);
+                if (error) throw error;
+                
+                await fetchEvents();
+                showSuccess('Event deleted!');
+                
+            } catch (error) {
+                handleError(error, 'Delete event');
+            }
+        }
+
+        function displayEventsForDate(date) {
+            const eventList = document.getElementById('event-list');
+            const dayEvents = events.filter(event => event.date === date);
+            
+            eventList.innerHTML = '';
+            
+            if (dayEvents.length === 0) {
+                eventList.innerHTML = '<p class="text-gray-500 text-sm">No events for this date</p>';
+                return;
+            }
+            
+            dayEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+                eventDiv.innerHTML = `
+                    <div>
+                        <div class="font-medium">${event.title}</div>
+                        ${event.time ? `<div class="text-sm text-gray-500">${event.time}</div>` : ''}
+                    </div>
+                    <button onclick="deleteEvent(${event.id})" class="delete-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Delete</button>
+                `;
+                eventList.appendChild(eventDiv);
+            });
+        }
+
+        async function fetchEvents() {
+            try {
+                const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true });
+                if (error) throw error;
+                
+                events = data;
+                renderCalendar();
+                
+                if (selectedDate) {
+                    displayEventsForDate(selectedDate);
+                }
+                
+                updateCountdown();
+                
+            } catch (error) {
+                handleError(error, 'Fetch events');
+            }
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const upcomingEvents = events.filter(event => new Date(event.date) >= now).slice(0, 3);
+            
+            if (upcomingEvents.length === 0) {
+                document.getElementById('countdown-section').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('countdown-section').classList.remove('hidden');
+            document.getElementById('countdown-title').textContent = 'Upcoming Events';
+            
+            const countdownList = document.getElementById('countdown-list');
+            countdownList.innerHTML = '';
+            
+            upcomingEvents.forEach(event => {
+                const eventDate = new Date(event.date);
+                const timeDiff = eventDate - now;
+                const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'mb-2';
+                eventDiv.innerHTML = `
+                    <div class="font-medium">${event.title}</div>
+                    <div class="text-sm">${daysLeft} days left (${eventDate.toLocaleDateString()})</div>
+                `;
+                countdownList.appendChild(eventDiv);
+            });
+        }
+
+        // Background management
+        async function saveBackground() {
+            try {
+                showNotification('Uploading background...', 'info');
+                
+                const fileInput = document.getElementById('background-upload-input');
+                const urlInput = document.getElementById('unsplash-url-input').value.trim();
+                let backgroundUrl = null;
+
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    
+                    if (file.size > 5 * 1024 * 1024) {
+                        throw new Error('File size must be less than 5MB');
+                    }
+                    
+                    if (!file.type.startsWith('image/')) {
+                        throw new Error('Please select a valid image file');
+                    }
+                    
+                    const fileName = `background_${Date.now()}_${file.name}`;
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('backgrounds')
+                        .upload(fileName, file, { upsert: true });
+                        
+                    if (uploadError) {
+                        throw new Error(`Error uploading file: ${uploadError.message}`);
+                    }
+                    
+                    backgroundUrl = fileName;
+                    
+                } else if (urlInput && urlInput.startsWith('https://')) {
+                    try {
+                        new URL(urlInput);
+                        backgroundUrl = urlInput;
+                    } catch {
+                        throw new Error('Please enter a valid URL');
+                    }
+                } else {
+                    throw new Error('Please select an image file or enter a valid URL');
+                }
+
+                const { data, error: fetchError } = await supabase.from('settings').select('*').eq('id', 1).single();
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    throw new Error(`Error fetching settings: ${fetchError.message}`);
+                }
+
+                let updateError;
+                if (data) {
+                    const { error } = await supabase
+                        .from('settings')
+                        .update({ background_url: backgroundUrl, updated_at: new Date().toISOString() })
+                        .eq('id', 1);
+                    updateError = error;
+                } else {
+                    const { error } = await supabase
+                        .from('settings')
+                        .insert({ id: 1, background_url: backgroundUrl, updated_at: new Date().toISOString() });
+                    updateError = error;
+                }
+
+                if (updateError) throw new Error(`Error saving background: ${updateError.message}`);
+
+                fileInput.value = '';
+                document.getElementById('unsplash-url-input').value = '';
+                
+                await fetchBackground();
+                showSuccess('Background updated successfully!');
+                
+            } catch (error) {
+                handleError(error, 'Save background');
+            }
+        }
+
+        async function fetchBackground() {
+            try {
+                const { data, error } = await supabase.from('settings').select('background_url').eq('id', 1).single();
+                
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
+                }
+                
+                if (data && data.background_url) {
+                    let imageUrl = data.background_url;
+                    
+                    if (!imageUrl.startsWith('http')) {
+                        const { data: urlData } = supabase.storage.from('backgrounds').getPublicUrl(imageUrl);
+                        imageUrl = urlData.publicUrl;
+                    }
+                    
+                    document.body.style.backgroundImage = `url(${imageUrl})`;
+                } else {
+                    document.body.style.backgroundImage = 'url(https://source.unsplash.com/1920x1080/?nature,landscape)';
+                }
+                
+            } catch (error) {
+                console.error('Fetch background error:', error);
+                document.body.style.backgroundImage = 'url(https://source.unsplash.com/1920x1080/?nature,landscape)';
+            }
+        }
+
+        async function fetchNames() {
+            try {
+                const { data, error } = await supabase.from('names').select('*');
+                if (error) throw error;
+                
+                data.forEach(item => {
+                    names[item.person_id] = item.name;
+                    document.getElementById(`person${item.person_id}-name`).textContent = item.name;
+                });
+                
+                await updateTodoTags();
+                
+            } catch (error) {
+                console.error('Fetch names error:', error);
+                await updateTodoTags();
+            }
+        }
+
+        async function fetchData() {
+            await Promise.all([
+                fetchNames(),
+                fetchReminders(),
+                fetchTodos(),
+                fetchEvents(),
+                fetchBackground()
+            ]);
+        }
+
+        function setupSubscriptions() {
+            supabase.channel('public:reminders').on('postgres_changes', { event: '*', schema: 'public', table: 'reminders' }, fetchReminders).subscribe();
+            supabase.channel('public:tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchTodos).subscribe();
+            supabase.channel('public:events').on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, fetchEvents).subscribe();
+            supabase.channel('public:names').on('postgres_changes', { event: '*', schema: 'public', table: 'names' }, fetchNames).subscribe();
+        }
+
+        // Enhanced page load
+        window.onload = async function() {
+            try {
+                console.log('🚀 Family HQ Enhanced loading...');
+                
+                initializeTheme();
+                
+                showNotification('Loading Family HQ...', 'info');
+                
+                await fetchData();
+                
+                setupSubscriptions();
+                
+                renderCalendar();
+                
+                setInterval(() => {
+                    fetchEvents();
+                }, 60000);
+                
+                setTimeout(() => {
+                    showSuccess('Family HQ loaded successfully!
+                                                setTimeout(() => {
+                    showSuccess('Family HQ loaded successfully! 🎉');
+                }, 1000);
+                
+                console.log('✅ Family HQ Enhanced loaded successfully');
+                
+            } catch (error) {
+                console.error('❌ Page load error:', error.message);
+                showError('Failed to load Family HQ: ' + error.message);
+            }
+        };
+    </script>
+</body>
+</html>
